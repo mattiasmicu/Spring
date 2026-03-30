@@ -20,8 +20,8 @@ Download the latest release from the [releases page](../../releases).
 ### Steps
 
 ```bash
-git clone https://github.com/yourusername/argon-mc.git
-cd argon-mc
+git clone https://github.com/mattiasmicu/Argon.git
+cd Argon
 npm install
 npm run tauri build
 ```
@@ -36,7 +36,7 @@ npm run tauri dev
 
 - Sign in with your Microsoft account
 - Download and manage multiple Minecraft instances
-- Automatic Java 21 setup
+- Automatic Java setup
 - Support for vanilla and modded instances
 - Lightweight and fast, built with Tauri
 

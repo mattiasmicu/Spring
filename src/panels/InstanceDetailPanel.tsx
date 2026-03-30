@@ -277,20 +277,42 @@ export const InstanceDetailPanel: React.FC<{ id: string }> = ({ id }) => {
                             ) : children.length === 0 ? (
                               <span className="text-[11px] text-text-d pl-2 py-1 block">Empty</span>
                             ) : (
-                              children.map(child =>
-                                child.is_dir ? (
-                                  <FolderItem key={child.path} value={child.path}>
-                                    <FolderTrigger onClick={() => setCurrentPath(child.path)} className="w-full">
-                                      {child.name}
-                                    </FolderTrigger>
-                                  </FolderItem>
-                                ) : (
+                              children.map(child => {
+                                if (child.is_dir) {
+                                  const grandChildren = subFiles[child.path];
+                                  return (
+                                    <FolderItem key={child.path} value={child.path}>
+                                      <FolderTrigger onClick={() => handleFolderOpen(child.path)} className="w-full">
+                                        {child.name}
+                                      </FolderTrigger>
+                                      <FolderContent>
+                                        <SubFiles>
+                                          {grandChildren === undefined || grandChildren === null ? (
+                                            <span className="text-[11px] text-text-d pl-2 py-1 block">
+                                              {grandChildren === null ? 'Loading...' : ''}
+                                            </span>
+                                          ) : grandChildren.length === 0 ? (
+                                            <span className="text-[11px] text-text-d pl-2 py-1 block">Empty</span>
+                                          ) : (
+                                            grandChildren.map(g => (
+                                              <FileItem key={g.path} icon={fileIcon(g.name)}>
+                                                <span className="flex-1 truncate">{g.name}</span>
+                                                <span className="text-[10px] text-text-d ml-2 tabular-nums">{fmtSize(g.size)}</span>
+                                              </FileItem>
+                                            ))
+                                          )}
+                                        </SubFiles>
+                                      </FolderContent>
+                                    </FolderItem>
+                                  );
+                                }
+                                return (
                                   <FileItem key={child.path} icon={fileIcon(child.name)}>
                                     <span className="flex-1 truncate">{child.name}</span>
                                     <span className="text-[10px] text-text-d ml-2 tabular-nums">{fmtSize(child.size)}</span>
                                   </FileItem>
-                                )
-                              )
+                                );
+                              })
                             )}
                           </SubFiles>
                         </FolderContent>

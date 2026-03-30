@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as Accordion from '@radix-ui/react-accordion';
 import { FolderIcon, FolderOpenIcon, FileIcon } from 'lucide-react';
 
 import {
@@ -10,7 +11,6 @@ import {
   FolderHighlight as FolderHighlightPrimitive,
   Folder as FolderPrimitive,
   FolderIcon as FolderIconPrimitive,
-  FileLabel as FileLabelPrimitive,
   FolderContent as FolderContentPrimitive,
   FileHighlight as FileHighlightPrimitive,
   File as FilePrimitive,
@@ -19,7 +19,6 @@ import {
   type FolderItemProps as FolderItemPrimitiveProps,
   type FolderContentProps as FolderContentPrimitiveProps,
   type FileProps as FilePrimitiveProps,
-  type FileLabelProps as FileLabelPrimitiveProps,
 } from '@/components/animate-ui/primitives/radix/files';
 import { cn } from '@/lib/utils';
 
@@ -49,7 +48,7 @@ function FolderItem(props: FolderItemProps) {
   return <FolderItemPrimitive {...props} />;
 }
 
-type FolderTriggerProps = FileLabelPrimitiveProps & {
+type FolderTriggerProps = React.ComponentPropsWithoutRef<typeof Accordion.Trigger> & {
   gitStatus?: GitStatus;
 };
 
@@ -61,7 +60,7 @@ function FolderTrigger({
 }: FolderTriggerProps) {
   return (
     <FolderHeaderPrimitive>
-      <FolderTriggerPrimitive className="w-full text-start">
+      <FolderTriggerPrimitive className="w-full text-start" {...props}>
         <FolderHighlightPrimitive>
           <FolderPrimitive className="flex items-center justify-between gap-2 p-2 pointer-events-none">
             <div
@@ -76,12 +75,9 @@ function FolderTrigger({
                 closeIcon={<FolderIcon className="size-4.5" />}
                 openIcon={<FolderOpenIcon className="size-4.5" />}
               />
-              <FileLabelPrimitive
-                className={cn('text-sm', className)}
-                {...props}
-              >
+              <span className={cn('text-sm', className)}>
                 {children}
-              </FileLabelPrimitive>
+              </span>
             </div>
 
             {gitStatus && (
@@ -137,9 +133,9 @@ function FileItem({
           <FileIconPrimitive>
             <Icon className="size-4.5" />
           </FileIconPrimitive>
-          <FileLabelPrimitive className={cn('text-sm', className)} {...props}>
+          <span className={cn('text-sm', className)} {...props}>
             {children}
-          </FileLabelPrimitive>
+          </span>
         </div>
 
         {gitStatus && (
