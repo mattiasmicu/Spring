@@ -18,7 +18,7 @@ Spring is a fast, lightweight Minecraft launcher built with [Tauri](https://taur
 - **Multiple Instances** - Create and manage separate Minecraft installations
 - **Mod Support** - Install Forge, Fabric, and Quilt mod loaders
 - **Mod Browser** - Search and install mods directly from Modrinth
-- **Auto Java Setup** - Automatic Java 21/17/8 detection and download
+- **Auto Java Setup** - Automatic Java detection and download
 - **Skin Management** - Change your Minecraft skin from the launcher
 - **Instance Settings** - Per-instance memory allocation, Java args, and more
 - **Cross-Platform** - Works on macOS, Windows, and Linux
@@ -93,9 +93,9 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 
 ## Acknowledgments
 
-- Authentication implementation inspired by [PandoraLauncher](https://github.com/Moulberry/PandoraLauncher)
+- I have got alot of inspo from [PandoraLauncher](https://github.com/Moulberry/PandoraLauncher)
 - Minecraft version metadata from [Mojang](https://launchermeta.mojang.com/)
-- Mods powered by [Modrinth](https://modrinth.com/)
+- Mods from [Modrinth](https://modrinth.com/)
 
 ## License
 
