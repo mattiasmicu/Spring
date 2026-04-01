@@ -1,5 +1,4 @@
-use tauri::command;
-use tauri::{Emitter, Manager};
+use tauri::{command, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 use serde::{Deserialize, Serialize};
 use reqwest::Client;
 use tokio::time::Duration;
@@ -190,8 +189,8 @@ fn get_pending_auth() -> Arc<Mutex<Option<PendingAuthorization>>> {
 
 // ── Commands ───────────────────────────────────────────────────────────────────
 
-/// Start Microsoft OAuth2 authorization flow with local redirect
-/// Opens browser and starts local server to capture the redirect
+/// Start Microsoft OAuth2 authorization flow with in-app webview
+/// Opens a webview window for auth and captures the redirect
 #[command]
 pub async fn start_microsoft_auth(app: tauri::AppHandle) -> Result<(), String> {
     let pending = create_authorization();
@@ -203,16 +202,23 @@ pub async fn start_microsoft_auth(app: tauri::AppHandle) -> Result<(), String> {
     *guard = Some(pending);
     drop(guard);
     
-    // Open browser
-    if let Err(e) = open::that(&auth_url) {
-        return Err(format!("Failed to open browser: {}", e));
-    }
+    // Create a webview window for authentication
+    let auth_window = WebviewWindowBuilder::new(&app, "auth", WebviewUrl::External(auth_url.parse().unwrap()))
+        .title("Sign in with Microsoft")
+        .inner_size(500.0, 600.0)
+        .center()
+        .resizable(false)
+        .build()
+        .map_err(|e| format!("Failed to create auth window: {}", e))?;
     
     // Start local server in background to handle redirect
     let app_handle = app.clone();
     tauri::async_runtime::spawn(async move {
         match start_redirect_server().await {
             Ok(finished) => {
+                // Close the auth window
+                let _ = auth_window.close();
+                
                 // Exchange code for tokens
                 match finish_authorization(finished).await {
                     Ok(tokens) => {
@@ -232,6 +238,7 @@ pub async fn start_microsoft_auth(app: tauri::AppHandle) -> Result<(), String> {
                 }
             }
             Err(e) => {
+                let _ = auth_window.close();
                 let _ = app_handle.emit("auth-error", format!("Auth server error: {}", e));
             }
         }
@@ -264,7 +271,7 @@ pub async fn refresh_token(refresh: String) -> Result<UserProfile, String> {
             ("client_id", CLIENT_ID),
             ("grant_type", "refresh_token"),
             ("refresh_token", refresh.as_str()),
-            ("scope", "XboxLive.signin offline_access"),
+            ("scope", "XboxLive.signin"),
         ])
         .send()
         .await
@@ -564,7 +571,7 @@ async fn refresh_microsoft_token(refresh_token: &str) -> Result<(String, String)
             ("client_id", CLIENT_ID),
             ("grant_type", "refresh_token"),
             ("refresh_token", refresh_token),
-            ("scope", "XboxLive.signin offline_access"),
+            ("scope", "XboxLive.signin"),
         ])
         .send()
         .await
@@ -595,7 +602,6 @@ fn create_authorization() -> PendingAuthorization {
         .authorize_url(CsrfToken::new_random)
         .add_extra_param("prompt", "select_account")
         .add_scope(Scope::new("XboxLive.signin".to_string()))
-        .add_scope(Scope::new("offline_access".to_string()))
         .set_pkce_challenge(pkce_challenge)
         .url();
     

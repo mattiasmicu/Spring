@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLauncherStore } from '../store/useLauncherStore';
+import { Loader } from '../components/Loader';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { Button } from '../components/Button';
 import { invoke } from '@tauri-apps/api/core';
@@ -135,9 +136,11 @@ export const AddAccountPanel: React.FC = () => {
           </div>
         ) : authStatus === 'authenticating' ? (
           <div className="text-center py-8 space-y-4">
-            <div className="w-8 h-8 border-2 border-text-p border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="flex justify-center">
+              <Loader size={48} color="orange" />
+            </div>
             <p className="text-text-s text-sm">Signing in with Microsoft...</p>
-            <p className="text-text-d text-xs">A browser window should have opened. Please complete the sign-in there.</p>
+            <p className="text-text-d text-xs">Complete the sign-in in the popup window.</p>
             <button onClick={handleCancel} className="text-text-s text-xs hover:text-text-p transition-colors">
               Cancel
             </button>

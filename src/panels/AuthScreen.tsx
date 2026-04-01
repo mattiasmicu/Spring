@@ -4,6 +4,7 @@ import { useLauncherStore } from '../store/useLauncherStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Download, Monitor, ShieldCheck, X } from 'lucide-react';
 import { Button } from '../components/Button';
+import { Loader } from '../components/Loader';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
@@ -157,9 +158,11 @@ export const AuthScreen: React.FC<{ isFullScreen?: boolean; onClose?: () => void
                     </motion.div>
                   ) : authStatus === 'authenticating' ? (
                     <motion.div key="authing" className="text-center py-8 space-y-4">
-                      <div className="w-8 h-8 border-2 border-text-p border-t-transparent rounded-full animate-spin mx-auto" />
+                      <div className="flex justify-center">
+                        <Loader size={48} color="orange" />
+                      </div>
                       <p className="text-text-s">Signing in with Microsoft...</p>
-                      <p className="text-text-d text-xs">A browser window should have opened. Please complete the sign-in there.</p>
+                      <p className="text-text-d text-xs">Complete the sign-in in the popup window.</p>
                       <button onClick={handleCancelAuth} className="text-text-s text-sm hover:text-text-p">Cancel</button>
                     </motion.div>
                   ) : null}
@@ -247,9 +250,11 @@ export const AuthScreen: React.FC<{ isFullScreen?: boolean; onClose?: () => void
               </motion.div>
             ) : authStatus === 'authenticating' ? (
               <motion.div key="authing" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="text-center py-6 space-y-4">
-                <div className="w-8 h-8 border-2 border-text-p border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="flex justify-center">
+                  <Loader size={40} color="orange" />
+                </div>
                 <p className="text-text-s text-sm">Signing in with Microsoft...</p>
-                <p className="text-text-d text-xs">A browser window should have opened. Please complete the sign-in there.</p>
+                <p className="text-text-d text-xs">Complete the sign-in in the popup window.</p>
                 <button onClick={handleCancelAuth} className="text-text-s text-xs hover:text-text-p">Cancel</button>
               </motion.div>
             ) : null}
