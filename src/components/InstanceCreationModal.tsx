@@ -1,3 +1,4 @@
+import { Button } from './Button';
 import React, { useState, useEffect, useRef } from 'react';
 import { useLauncherStore } from '../store/useLauncherStore';
 import { X, Search, Loader2, Upload } from 'lucide-react';
@@ -287,7 +288,7 @@ export const InstanceCreationModal: React.FC<InstanceCreationModalProps> = ({ is
                   </div>
                 </div>
 
-                <div className="overflow-y-auto bg-inner border border-border rounded-xl scroll-hide flex-1">
+                <div className="overflow-y-auto bg-inner border border-border rounded-xl scroll-hide flex-1 max-h-[280px]">
                   {versionsLoading ? (
                     <div className="flex items-center justify-center p-8 gap-2 text-text-s text-xs">
                       <Loader2 size={13} className="animate-spin" /> Loading versions...
@@ -344,49 +345,51 @@ export const InstanceCreationModal: React.FC<InstanceCreationModalProps> = ({ is
           <div className="flex-1 flex gap-2">
             {/* Back / Cancel */}
             {step === 'name' ? (
-              <button
+              <Button
                 onClick={() => { if (!creating) onClose(); }}
-                className="px-4 py-2 bg-inner2 border border-border rounded-lg text-xs font-bold text-text-s cursor-pointer hover:bg-outer transition-colors"
+                variant="ghost"
+                className="px-4 py-2 text-xs"
               >
                 Cancel
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 onClick={() => setStep(STEPS[stepIndex - 1])}
                 disabled={creating}
-                className="px-4 py-2 bg-inner2 border border-border rounded-lg text-xs font-bold text-text-s cursor-pointer hover:bg-outer transition-colors disabled:opacity-50"
+                variant="ghost"
+                className="px-4 py-2 text-xs"
               >
                 ← Back
-              </button>
+              </Button>
             )}
 
             {/* Next / Create */}
             {step === 'name' && (
-              <button
+              <Button
                 onClick={handleNameNext}
-                className="flex-1 py-2 bg-text-p text-inner rounded-lg text-xs font-bold cursor-pointer hover:opacity-90 transition-opacity"
+                className="flex-1 py-2 text-xs"
               >
                 Continue →
-              </button>
+              </Button>
             )}
             {step === 'loader' && (
-              <button
+              <Button
                 onClick={handleLoaderNext}
-                className="flex-1 py-2 bg-text-p text-inner rounded-lg text-xs font-bold cursor-pointer hover:opacity-90 transition-opacity"
+                className="flex-1 py-2 text-xs"
               >
                 Continue →
-              </button>
+              </Button>
             )}
             {step === 'version' && (
-              <button
+              <Button
                 onClick={handleCreate}
                 disabled={!selectedVersion || creating}
-                className="flex-1 py-2 bg-text-p text-inner rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                className="flex-1 py-2 text-xs flex items-center justify-center gap-2"
               >
                 {creating
                   ? <><Loader2 size={12} className="animate-spin" /> Creating...</>
                   : `Create · ${selectedVersion || '—'}`}
-              </button>
+              </Button>
             )}
           </div>
         </div>

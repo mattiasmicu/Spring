@@ -75,12 +75,20 @@ export const SkinsPanel: React.FC = () => {
       </header>
 
       <div className="max-w-md">
-        {/* Current Skin Preview */}
+        {/* Current Skin Preview - Player Head Only */}
         <div className="mb-6">
           <h2 className="text-sm font-bold text-text-p uppercase tracking-wider mb-3">Current Skin</h2>
-          <div className="w-32 h-32 bg-inner2 border border-border rounded-xl flex items-center justify-center overflow-hidden">
+          <div className="w-24 h-24 bg-inner2 border border-border rounded-xl flex items-center justify-center overflow-hidden">
             {auth?.skin ? (
-              <img src={auth.skin} alt="Current skin" className="w-full h-full object-cover" />
+              <img 
+                src={auth.skin} 
+                alt="Current skin" 
+                className="w-[800%] h-[800%] object-cover object-top"
+                style={{ 
+                  objectPosition: 'top',
+                  imageRendering: 'pixelated'
+                }}
+              />
             ) : (
               <div className="text-text-s text-xs">No skin</div>
             )}
@@ -109,7 +117,7 @@ export const SkinsPanel: React.FC = () => {
               <>
                 <Upload size={32} className="text-text-s mb-2" />
                 <span className="text-text-s text-sm">Click to select PNG file</span>
-                <span className="text-text-d text-xs mt-1">64x64 or 64x32 recommended</span>
+                <span className="text-text-d text-xs mt-1">64x64 for classic skin</span>
               </>
             )}
           </div>
@@ -166,7 +174,7 @@ export const SkinsPanel: React.FC = () => {
           <h3 className="text-xs font-bold text-text-s uppercase mb-2">Requirements</h3>
           <ul className="text-text-d text-xs space-y-1">
             <li>• PNG format only</li>
-            <li>• 64x64 pixels (modern) or 64x32 (legacy)</li>
+            <li>• 64x64 pixels for modern skins (classic)</li>
             <li>• File size under 1MB</li>
           </ul>
         </div>
