@@ -38,12 +38,12 @@ pub async fn launch_instance(
         version_id
     };
 
-    // Read version info to get libraries
-    let version_json_path = app_data.join("versions").join(effective_version_id).join(format!("{}.json", effective_version_id));
-    if !version_json_path.exists() {
-        return Err("Version JSON missing. Please download version first.".to_string());
+    // Read version info to get libraries - use MINECRAFT version for libraries, not loader version
+    let minecraft_version_json_path = app_data.join("versions").join(version_id).join(format!("{}.json", version_id));
+    if !minecraft_version_json_path.exists() {
+        return Err("Minecraft version JSON missing. Please download version first.".to_string());
     }
-    let version_json = fs::read_to_string(&version_json_path).map_err(|e| e.to_string())?;
+    let version_json = fs::read_to_string(&minecraft_version_json_path).map_err(|e| e.to_string())?;
     let version_info: serde_json::Value = serde_json::from_str(&version_json).map_err(|e| e.to_string())?;
 
     // Build Classpath
