@@ -14,8 +14,8 @@ export const Sidebar: React.FC = () => {
 
   const isActive = (id: string) => panelStack[panelStack.length - 1].id === id;
   const currentPanel = panelStack[panelStack.length - 1];
-  const activeInstanceId = currentPanel.id === 'instances' || currentPanel.id === 'instanceDetail' 
-    ? currentPanel.props?.instanceId || currentPanel.props?.id 
+  const activeInstanceId = currentPanel.id === 'instances' || currentPanel.id === 'instanceDetail'
+    ? currentPanel.props?.instanceId || currentPanel.props?.id
     : null;
 
   const handleInstanceClick = (instanceId: string) => {
@@ -51,7 +51,7 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      <div data-tauri-drag-region className="flex flex-col items-center py-4 bg-outer border-r border-border/10 w-[60px]">
+      <div data-tauri-drag-region className="flex flex-col items-center py-4 bg-outer w-[60px] shrink-0">
         <motion.button
           onClick={() => pushPanel('home')}
           whileHover={{ scale: 1.1 }}
@@ -78,13 +78,13 @@ export const Sidebar: React.FC = () => {
                 >
                   <div className={`w-full aspect-square rounded-xl flex items-center justify-center text-lg overflow-hidden ${
                     activeInstanceId === instance.id
-                      ? 'bg-inner2 text-text-p ring-2 ring-text-p/50' 
+                      ? 'bg-inner2 text-text-p ring-2 ring-text-p/50'
                       : 'bg-inner3 text-text-s'
                   }`}>
                     {instance.icon && instance.icon.startsWith('/') ? (
-                      <img 
-                        src={convertFileSrc(instance.icon)} 
-                        alt="" 
+                      <img
+                        src={convertFileSrc(instance.icon)}
+                        alt=""
                         className="w-full h-full object-cover"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
@@ -102,7 +102,7 @@ export const Sidebar: React.FC = () => {
               </TooltipContent>
             </Tooltip>
           ))}
-          
+
           <motion.button
             onClick={() => setShowCreateModal(true)}
             whileHover={{ scale: 1.1 }}
@@ -118,25 +118,24 @@ export const Sidebar: React.FC = () => {
 
         <div className="w-8 h-px bg-border/30 mb-4" />
 
-          <motion.button
-            onClick={() => pushPanel('settings')}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            className={`relative group ${isActive('settings') ? 'text-text-p' : 'text-text-s'}`}
-            title="Settings"
-          >
-            <SettingsIcon size={20} />
-            <div className={`absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-3 rounded-full transition-all ${isActive('settings') ? 'bg-orange-500' : 'bg-transparent'}`} />
-          </motion.button>
+        <motion.button
+          onClick={() => pushPanel('settings')}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+          className={`relative group ${isActive('settings') ? 'text-text-p' : 'text-text-s'}`}
+          title="Settings"
+        >
+          <SettingsIcon size={20} />
+          <div className={`absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-3 rounded-full transition-all ${isActive('settings') ? 'bg-orange-500' : 'bg-transparent'}`} />
+        </motion.button>
       </div>
 
       <InstanceCreationModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
 
-      {/* Context Menu */}
       <AnimatePresence>
         {contextMenu && (
-          <div 
+          <div
             className="fixed inset-0 z-[99999]"
             onClick={() => setContextMenu(null)}
           >

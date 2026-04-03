@@ -1,131 +1,162 @@
 import React from 'react';
 import { useLauncherStore } from '../store/useLauncherStore';
 import { convertFileSrc } from '@tauri-apps/api/core';
-import { motion } from 'framer-motion';
-import { Play, Users, Clock, Sword } from 'lucide-react';
+import { Play } from 'lucide-react';
+import { Button } from '../components/Button';
+
+const formatLastPlayed = (timestamp?: number) => {
+  if (!timestamp) return 'Never played';
+  const diff = Date.now() - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
+};
+
+const InstanceIcon: React.FC<{ icon?: string; name: string; size?: 'sm' | 'md' }> = ({
+  icon,
+  name,
+  size = 'md',
+}) => {
+  const dim = size === 'sm' ? 'w-9 h-9' : 'w-11 h-11';
+  const text = size === 'sm' ? 'text-sm' : 'text-base';
+  return (
+    <div
+      className={`${dim} rounded-lg overflow-hidden flex-shrink-0 bg-inner3 border border-border flex items-center justify-center ${text} font-medium text-text-s`}
+    >
+      {icon && icon.startsWith('/') ? (
+        <img
+          src={convertFileSrc(icon)}
+          alt=""
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
+      ) : (
+        name.charAt(0).toUpperCase()
+      )}
+    </div>
+  );
+};
 
 export const HomePanel: React.FC = () => {
   const { auth, instances, pushPanel } = useLauncherStore();
 
-  const recentInstances = instances.slice(0, 5);
+  const sorted = [...instances].sort((a, b) => {
+    if (a.lastPlayed && b.lastPlayed) return b.lastPlayed - a.lastPlayed;
+    if (a.lastPlayed) return -1;
+    if (b.lastPlayed) return 1;
+    return 0;
+  });
+
+  const recent = sorted.slice(0, 4);
+  const more = sorted.slice(4, 8);
+
+  const quickLinks = [
+    { label: 'Discover', sub: 'Find new modpacks', panel: 'discover' },
+    { label: 'Library', sub: 'All instances', panel: 'library' },
+    { label: 'Skins', sub: 'Customize your look', panel: 'skins' },
+    { label: 'Settings', sub: 'Configure launcher', panel: 'settings' },
+  ] as const;
 
   return (
     <div className="h-full overflow-y-auto p-8 scroll-hide">
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold text-text-p">
-          Welcome back{auth ? `, ${auth.username}` : ''}!
-        </h1>
-        <p className="text-text-s text-sm">Jump back in</p>
-      </header>
+      {/* Greeting */}
+      <h1 className="text-2xl font-semibold text-text-p mb-8">
+        Welcome back{auth ? `, ${auth.username}` : ''}
+      </h1>
 
-      {/* Recent Worlds - Like ModRief style */}
+      {/* Quick links */}
       <section className="mb-8">
-        <h2 className="text-sm font-bold text-text-p uppercase tracking-wider mb-4">Jump back in</h2>
-        <div className="flex flex-col gap-3">
-          {recentInstances.length > 0 ? recentInstances.map((instance) => (
-            <div
-              key={instance.id}
-              onClick={() => pushPanel('instanceDetail', { id: instance.id })}
-              className="flex items-center gap-4 p-4 bg-inner2 border border-border rounded-xl hover:bg-inner3 transition-colors cursor-pointer group"
+        <p className="text-[11px] font-medium text-text-s uppercase tracking-widest mb-3">
+          Quick access
+        </p>
+        <div className="grid grid-cols-4 gap-2">
+          {quickLinks.map(({ label, sub, panel }) => (
+            <button
+              key={label}
+              className="text-left p-3 bg-inner2 border border-border rounded-xl hover:border-text-p/20 hover:bg-inner3 transition-colors"
+              onClick={() => pushPanel(panel)}
             >
-              <div className="w-14 h-14 bg-inner3 rounded-lg overflow-hidden flex-shrink-0">
-              {instance.icon && instance.icon.startsWith('/') ? (
-                <motion.img 
-                  src={convertFileSrc(instance.icon)} 
-                  alt="" 
-                  className="w-full h-full object-cover"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
-              ) : (
-                <motion.span 
-                  className="w-full h-full flex items-center justify-center text-xl font-bold"
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              <p className="text-sm font-medium text-text-p">{label}</p>
+              <p className="text-[11px] text-text-s mt-0.5">{sub}</p>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Continue playing */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[11px] font-medium text-text-s uppercase tracking-widest">
+            Continue playing
+          </p>
+          <button
+            className="text-[11px] text-text-s hover:text-text-p transition-colors"
+            onClick={() => pushPanel('library')}
+          >
+            See all →
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          {recent.length > 0 ? (
+            recent.map((instance) => (
+              <div
+                key={instance.id}
+                className="group flex items-center gap-3 p-3 bg-inner2 border border-border rounded-xl cursor-pointer hover:border-text-p/20 transition-colors"
+                onClick={() => pushPanel('instanceDetail', { id: instance.id })}
+              >
+                <InstanceIcon icon={instance.icon} name={instance.name} />
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-text-p truncate">{instance.name}</p>
+                  <p className="text-[11px] text-text-s mt-0.5">
+                    {instance.loader} · {instance.version} · {formatLastPlayed(instance.lastPlayed)}
+                  </p>
+                </div>
+
+                <Button
+                  className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // launch instance
+                  }}
                 >
-                  {instance.name.charAt(0).toUpperCase()}
-                </motion.span>
-              )}
+                  <Play size={12} className="mr-1" fill="currentColor" />
+                  Play
+                </Button>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-base font-bold text-text-p truncate">{instance.name}</h3>
-                  <span className="flex items-center gap-1 text-[10px] text-text-s">
-                    <Users size={10} />
-                    Singleplayer
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-[11px] text-text-s">
-                  <span className="flex items-center gap-1">
-                    <Clock size={10} />
-                    Played recently
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <Sword size={10} />
-                    {instance.loader} {instance.version}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-text-s flex items-center gap-1">
-                  <Sword size={12} />
-                  Survival mode
-                </span>
-                <button className="px-5 py-2 bg-text-p text-inner rounded-lg text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-2 focus:outline-none cursor-pointer">
-                  <Play size={14} fill="currentColor" /> Play
-                </button>
-              </div>
-            </div>
-          )) : (
-            <div className="p-8 border border-dashed border-border rounded-xl text-center text-text-s text-sm">
-              No instances yet. Click the + button in the sidebar to create one!
+            ))
+          ) : (
+            <div className="col-span-2 p-8 border border-dashed border-border rounded-xl text-center text-text-s text-sm">
+              No instances yet — click the + button in the sidebar to create one.
             </div>
           )}
         </div>
       </section>
 
-      {instances.length > 5 && (
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-text-p uppercase tracking-wider">All Your Worlds</h2>
-            <button 
-              onClick={() => pushPanel('library')}
-              className="text-[11px] text-text-s hover:text-text-p focus:outline-none cursor-pointer"
-            >
-              See all ›
-            </button>
-          </div>
-          <div className="grid grid-cols-4 gap-3">
-            {instances.slice(5, 9).map((instance) => (
+      {/* More worlds */}
+      {more.length > 0 && (
+        <section>
+          <p className="text-[11px] font-medium text-text-s uppercase tracking-widest mb-3">
+            More worlds
+          </p>
+          <div className="grid grid-cols-4 gap-2">
+            {more.map((instance) => (
               <div
                 key={instance.id}
+                className="p-3 bg-inner2 border border-border rounded-xl cursor-pointer hover:border-text-p/20 transition-colors"
                 onClick={() => pushPanel('instanceDetail', { id: instance.id })}
-                className="p-3 bg-inner2 border border-border rounded-xl hover:bg-inner3 transition-colors cursor-pointer"
               >
-                <div className="w-10 h-10 bg-inner3 rounded-lg mb-2 flex items-center justify-center text-lg overflow-hidden">
-                  {instance.icon && instance.icon.startsWith('/') ? (
-                    <motion.img 
-                      src={convertFileSrc(instance.icon)} 
-                      alt="" 
-                      className="w-full h-full object-cover rounded"
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                    />
-                  ) : (
-                    <motion.span 
-                      className="font-bold"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                    >
-                      {instance.name.charAt(0).toUpperCase()}
-                    </motion.span>
-                  )}
-                </div>
-                <h4 className="text-xs font-medium text-text-p truncate">{instance.name}</h4>
-                <p className="text-[9px] text-text-s">{instance.version}</p>
+                <InstanceIcon icon={instance.icon} name={instance.name} size="sm" />
+                <p className="text-sm font-medium text-text-p truncate mt-2">{instance.name}</p>
+                <p className="text-[11px] text-text-s mt-0.5">{instance.version}</p>
               </div>
             ))}
           </div>

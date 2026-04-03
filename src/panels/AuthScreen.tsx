@@ -131,6 +131,17 @@ export const AuthScreen: React.FC<{ isFullScreen?: boolean; onClose?: () => void
     }
   };
 
+  const handleImportLauncher = async (launcher: string) => {
+    setFinishError(null);
+    try {
+      // TODO: Implement actual import logic for each launcher
+      console.log(`Importing from ${launcher}...`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (err: any) {
+      setFinishError(typeof err === 'string' ? err : `Failed to import from ${launcher}`);
+    }
+  };
+
   // FULL SCREEN MODE
   if (isFullScreen) {
     return (
@@ -189,12 +200,12 @@ export const AuthScreen: React.FC<{ isFullScreen?: boolean; onClose?: () => void
                           <Button onClick={handleLogin} variant="outline" className="w-full">
                             Reopen Login Window
                           </Button>
-                          <button onClick={handleCancelAuth} className="text-text-s text-sm hover:text-text-p">Cancel</button>
+                          <Button onClick={handleCancelAuth} variant="ghost" className="w-full text-xs">Cancel</Button>
                         </div>
                       ) : (
                         <>
                           <p className="text-text-d text-xs">Complete the sign-in in the popup window</p>
-                          <button onClick={handleCancelAuth} className="text-text-s text-sm hover:text-text-p">Cancel</button>
+                          <Button onClick={handleCancelAuth} variant="ghost" className="w-full text-xs">Cancel</Button>
                         </>
                       )}
                     </motion.div>
@@ -240,13 +251,52 @@ export const AuthScreen: React.FC<{ isFullScreen?: boolean; onClose?: () => void
                   <ShieldCheck size={32} className="text-text-p" />
                 </div>
                 <h1 className="text-3xl font-bold mb-3 text-center">You're all set!</h1>
-                <p className="text-text-s text-center mb-8">Ready to create your first instance.</p>
+                <p className="text-text-s text-center mb-8">Choose how to get started.</p>
                 {finishError && (
                   <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs text-center">
                     {finishError}
                   </div>
                 )}
-                <Button onClick={handleFinish} className="w-full"><Check size={16} className="mr-2" /> Create Instance & Finish</Button>
+                
+                <div className="space-y-3">
+                  <Button onClick={handleFinish} className="w-full">
+                    <Check size={16} className="mr-2" /> Create Fresh Instance
+                  </Button>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-border"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                      <span className="px-2 bg-black text-text-s">or import from</span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button onClick={() => handleImportLauncher('minecraft')} variant="outline" className="text-xs py-2">
+                      Minecraft Launcher
+                    </Button>
+                    <Button onClick={() => handleImportLauncher('prism')} variant="outline" className="text-xs py-2">
+                      Prism Launcher
+                    </Button>
+                    <Button onClick={() => handleImportLauncher('modrinth')} variant="outline" className="text-xs py-2">
+                      Modrinth
+                    </Button>
+                    <Button onClick={() => handleImportLauncher('lunar')} variant="outline" className="text-xs py-2">
+                      Lunar Client
+                    </Button>
+                    <Button onClick={() => handleImportLauncher('feather')} variant="outline" className="text-xs py-2">
+                      Feather Client
+                    </Button>
+                    <Button onClick={() => handleImportLauncher('atlauncher')} variant="outline" className="text-xs py-2">
+                      ATLauncher
+                    </Button>
+                  </div>
+                  
+                  <Button onClick={() => handleImportLauncher('browse')} variant="ghost" className="w-full text-xs text-text-s">
+                    Browse for instances folder...
+                  </Button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -265,7 +315,7 @@ export const AuthScreen: React.FC<{ isFullScreen?: boolean; onClose?: () => void
   return createPortal(
     <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center overflow-y-auto">
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-md bg-inner border border-border rounded-shell overflow-hidden shadow-2xl relative my-auto">
-        {onClose && <button onClick={onClose} className="absolute top-4 right-4 p-2 text-text-s hover:text-text-p transition-colors z-10"><X size={20} /></button>}
+        {onClose && <Button onClick={onClose} variant="ghost" className="absolute top-4 right-4 p-2 z-10"><X size={20} /></Button>}
         <div className="p-8">
           <div className="w-24 h-24 mb-1 mx-auto">
             <img src="/Spring-orange.png" alt="Spring" className="w-full h-full object-contain" />
@@ -306,12 +356,12 @@ export const AuthScreen: React.FC<{ isFullScreen?: boolean; onClose?: () => void
                     <Button onClick={handleLogin} variant="outline" className="w-full text-sm">
                       Reopen Login Window
                     </Button>
-                    <button onClick={handleCancelAuth} className="text-text-s text-xs hover:text-text-p">Cancel</button>
+                    <Button onClick={handleCancelAuth} variant="ghost" className="w-full text-xs">Cancel</Button>
                   </div>
                 ) : (
                   <>
                     <p className="text-text-d text-xs">Complete the sign-in in the popup window</p>
-                    <button onClick={handleCancelAuth} className="text-text-s text-xs hover:text-text-p">Cancel</button>
+                    <Button onClick={handleCancelAuth} variant="ghost" className="w-full text-xs">Cancel</Button>
                   </>
                 )}
               </motion.div>

@@ -1,21 +1,15 @@
 import React, { useState } from 'react';
-import { Moon, Sun, User, LogOut, Trash2, ChevronLeft, ChevronRight, Plus, ArrowUp, ArrowDown } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Moon, Sun, User, LogOut, Trash2, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 import { useLauncherStore } from '../store/useLauncherStore';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './Button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from './DropdownMenu';
 import { AuthScreen } from '../panels/AuthScreen';
 
 export const TopBar: React.FC = () => {
-  const { panelStack, forwardStack, popPanel, forwardPanel, pushPanel, auth, accounts, toggleTheme, theme, removeAccount, setActiveAccount, setAuth, reorderAccounts } = useLauncherStore();
+  const { panelStack, forwardStack, popPanel, forwardPanel, pushPanel, auth, accounts, toggleTheme, theme, removeAccount, setActiveAccount, setAuth } = useLauncherStore();
   const [showAddAccount, setShowAddAccount] = useState(false);
+  const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
 
   const handleRemoveAccount = (uuid: string) => {
     removeAccount(uuid);
@@ -111,105 +105,190 @@ export const TopBar: React.FC = () => {
 
       <div className="flex items-center gap-3">
         {auth ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="flex items-center gap-2 px-2 py-1 h-auto bg-inner2 border-border"
-              >
-                <div className="w-6 h-6 bg-inner3 rounded-sm overflow-hidden">
-                  {auth.skin ? (
-                    <img src={auth.skin || `https://crafatar.com/avatars/${auth.uuid}?size=64&overlay=true`} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <User size={14} className="m-auto mt-1 text-text-s" />
-                  )}
-                </div>
-                <div className="flex flex-col items-start">
-                  <span className="text-xs font-bold leading-tight">{auth.username}</span>
-                  <span className="text-[10px] text-text-s leading-tight uppercase tracking-wider">{auth.tier}</span>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
-              <DropdownMenuLabel>Current Account</DropdownMenuLabel>
-              <div className="px-3 py-2 border-b border-border">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-inner3 rounded overflow-hidden">
-                    {auth.skin ? (
-                      <img src={auth.skin || `https://crafatar.com/avatars/${auth.uuid}?size=64&overlay=true`} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <User size={16} className="m-auto mt-1.5 text-text-s" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold">{auth.username}</p>
-                    <p className="text-[10px] text-text-s uppercase">{auth.tier}</p>
-                  </div>
-                </div>
+          <>
+            <button
+              onClick={() => setShowAccountSwitcher(true)}
+              className="flex items-center gap-2 px-2 py-1 h-auto bg-inner2 border border-border rounded-md hover:bg-inner3 transition-colors"
+            >
+              <div className="w-6 h-6 bg-inner3 rounded-sm overflow-hidden relative">
+                {auth.skin ? (
+                  <>
+                    {/* Base layer */}
+                    <div 
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: `url(${auth.skin})`,
+                        backgroundSize: '800% 800%',
+                        backgroundPosition: '-100% -100%',
+                        imageRendering: 'pixelated'
+                      }}
+                    />
+                    {/* Overlay layer (hat/2nd layer) */}
+                    <div 
+                      className="absolute -inset-0.5"
+                      style={{
+                        backgroundImage: `url(${auth.skin})`,
+                        backgroundSize: '800% 800%',
+                        backgroundPosition: '-500% -100%',
+                        imageRendering: 'pixelated'
+                      }}
+                    />
+                  </>
+                ) : (
+                  <User size={14} className="m-auto mt-1 text-text-s" />
+                )}
               </div>
-              <DropdownMenuSeparator />
+              <div className="flex flex-col items-start">
+                <span className="text-xs font-bold leading-tight">{auth.username}</span>
+                <span className="text-[10px] text-text-s leading-tight uppercase tracking-wider">{auth.tier}</span>
+              </div>
+            </button>
 
-              {accounts.length > 0 && (
-                <>
-                  <DropdownMenuLabel>All Accounts</DropdownMenuLabel>
-                  {accounts.map((account, index) => (
-                    <DropdownMenuItem key={account.uuid} onClick={() => handleSwitchAccount(account.uuid)}>
-                      <div className="flex items-center gap-2 flex-1">
-                        <div className="w-5 h-5 bg-inner3 rounded overflow-hidden">
-                          {account.skin ? (
-                            <img src={account.skin} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <User size={12} className="m-auto mt-0.5 text-text-s" />
-                          )}
-                        </div>
-                        <span className={account.uuid === auth?.uuid ? 'font-bold text-text-p' : ''}>
-                          {account.username}
-                        </span>
+            {/* Account Switcher Sidebar - slides in from right */}
+            {showAccountSwitcher && createPortal(
+              <AnimatePresence>
+                <motion.div
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '100%' }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  className="fixed top-0 right-0 bottom-0 w-80 bg-inner border-l border-border z-[99999] shadow-2xl"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-4 border-b border-border">
+                    <h2 className="text-lg font-bold text-text-p">Accounts</h2>
+                    <button 
+                      onClick={() => setShowAccountSwitcher(false)}
+                      className="p-2 hover:bg-inner2 rounded-lg transition-colors"
+                    >
+                      <X size={20} className="text-text-s" />
+                    </button>
+                  </div>
+
+                  {/* Current Account */}
+                  <div className="p-4 border-b border-border">
+                    <p className="text-xs text-text-s uppercase mb-3">Currently using</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-inner2 rounded overflow-hidden relative flex-shrink-0">
+                        {auth.skin ? (
+                          <>
+                            <div 
+                              className="absolute inset-0"
+                              style={{
+                                backgroundImage: `url(${auth.skin})`,
+                                backgroundSize: '800% 800%',
+                                backgroundPosition: '-100% -100%',
+                                imageRendering: 'pixelated'
+                              }}
+                            />
+                            <div 
+                              className="absolute -inset-0.5"
+                              style={{
+                                backgroundImage: `url(${auth.skin})`,
+                                backgroundSize: '800% 800%',
+                                backgroundPosition: '-500% -100%',
+                                imageRendering: 'pixelated'
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <User size={24} className="m-auto mt-2 text-text-s" />
+                        )}
                       </div>
-                      <div className="flex items-center gap-1">
-                        {index > 0 && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleMoveAccount(account.uuid, 'up'); }}
-                            className="p-1 hover:bg-inner2 rounded"
-                          >
-                            <ArrowUp size={12} />
-                          </button>
-                        )}
-                        {index < accounts.length - 1 && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleMoveAccount(account.uuid, 'down'); }}
-                            className="p-1 hover:bg-inner2 rounded"
-                          >
-                            <ArrowDown size={12} />
-                          </button>
-                        )}
-                        {accounts.length > 1 && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleRemoveAccount(account.uuid); }}
-                            className="p-1 hover:bg-red-500/20 text-red-400 rounded"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-text-p font-bold truncate">{auth.username}</p>
+                        <p className="text-xs text-text-s">{auth.tier}</p>
                       </div>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                </>
-              )}
+                    </div>
+                  </div>
 
-              <DropdownMenuItem onClick={handleAddAccount}>
-                <Plus size={14} className="mr-2" />
-                Add Account
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+                  {/* Other Accounts */}
+                  {accounts.length > 0 && (
+                    <div className="p-4 border-b border-border">
+                      <p className="text-xs text-text-s uppercase mb-3">Other accounts</p>
+                      <div className="space-y-2">
+                        {accounts.filter(a => a.uuid !== auth.uuid).map((account) => (
+                          <div 
+                            key={account.uuid}
+                            onClick={() => {
+                              setActiveAccount(account.uuid);
+                              setShowAccountSwitcher(false);
+                            }}
+                            className="flex items-center gap-3 p-2 bg-inner2 hover:bg-inner3 rounded-lg cursor-pointer transition-colors"
+                          >
+                            <div className="w-10 h-10 bg-inner3 rounded overflow-hidden relative flex-shrink-0">
+                              {account.skin ? (
+                                <>
+                                  <div 
+                                    className="absolute inset-0"
+                                    style={{
+                                      backgroundImage: `url(${account.skin})`,
+                                      backgroundSize: '800% 800%',
+                                      backgroundPosition: '-100% -100%',
+                                      imageRendering: 'pixelated'
+                                    }}
+                                  />
+                                  <div 
+                                    className="absolute -inset-0.5"
+                                    style={{
+                                      backgroundImage: `url(${account.skin})`,
+                                      backgroundSize: '800% 800%',
+                                      backgroundPosition: '-500% -100%',
+                                      imageRendering: 'pixelated'
+                                    }}
+                                  />
+                                </>
+                              ) : (
+                                <User size={20} className="m-auto mt-1.5 text-text-s" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-text-p font-medium text-sm truncate">{account.username}</p>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveAccount(account.uuid);
+                              }}
+                              className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors flex-shrink-0"
+                            >
+                              <Trash2 size={14} className="text-red-400" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-                <LogOut size={14} className="mr-2" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  {/* Actions */}
+                  <div className="p-4 space-y-2">
+                    <button
+                      onClick={() => {
+                        setShowAccountSwitcher(false);
+                        setShowAddAccount(true);
+                      }}
+                      className="w-full py-2.5 bg-text-p text-inner rounded-lg font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                    >
+                      <Plus size={18} />
+                      Add Account
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setShowAccountSwitcher(false);
+                      }}
+                      className="w-full py-2.5 border border-border hover:bg-inner2 rounded-lg font-medium text-text-s hover:text-text-p transition-colors flex items-center justify-center gap-2"
+                    >
+                      <LogOut size={18} />
+                      Sign Out
+                    </button>
+                  </div>
+                </motion.div>
+              </AnimatePresence>,
+              document.body
+            )}
+          </>
         ) : (
           <div className="text-xs text-text-s">Not signed in</div>
         )}

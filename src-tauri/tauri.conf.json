@@ -10,8 +10,10 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
+        "label": "main",
         "title": "",
         "width": 1200,
         "height": 800,
@@ -40,6 +42,16 @@
         "Resources/Assets.car": "resources/Assets.car"
       },
       "infoPlist": "Info.plist"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/mattiasmicu/Argon/releases/latest/download/latest.json"
+      ],
+      "dialog": false,
+      "pubkey": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQW91T2VvK3NNNWs5TmE4aFd1NmRwWWR2aE1EQ2xHQXNUVGwwZy95cVI1b2s9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo="
     }
   }
 }

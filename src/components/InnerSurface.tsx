@@ -10,7 +10,6 @@ import { SkinsPanel } from '../panels/SkinsPanel';
 import { SettingsPanel } from '../panels/SettingsPanel';
 import { AuthScreen } from '../panels/AuthScreen';
 
-// Simple Library component showing all instances
 const LibraryPanel: React.FC = () => {
   const { instances, pushPanel } = useLauncherStore();
   return (
@@ -25,9 +24,9 @@ const LibraryPanel: React.FC = () => {
           >
             <div className="w-12 h-12 bg-inner3 rounded-lg flex items-center justify-center text-2xl mb-3 overflow-hidden">
               {instance.icon && instance.icon.startsWith('/') ? (
-                <motion.img 
-                  src={convertFileSrc(instance.icon)} 
-                  alt="" 
+                <motion.img
+                  src={convertFileSrc(instance.icon)}
+                  alt=""
                   className="w-full h-full object-cover rounded-lg"
                   whileHover={{ scale: 1.05 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -62,25 +61,22 @@ const panels: Record<string, React.FC<any>> = {
   settings: SettingsPanel,
 };
 
-export const InnerSurface: React.FC = () => {
+export const InnerSurface: React.FC<{ className?: string }> = ({ className }) => {
   const { panelStack, auth } = useLauncherStore();
   const currentPanel = panelStack[panelStack.length - 1];
-  
-  // Determine animation direction based on navigation source
+
   const isTopbarNavigation = currentPanel?.source === 'topbar';
-  
-  // Topbar navigation: horizontal slide (side-to-side)
-  // Sidebar navigation: vertical slide (up-to-down)
-  const initialProps = isTopbarNavigation 
+
+  const initialProps = isTopbarNavigation
     ? { x: '100%', opacity: 0 }
     : { y: '100%', opacity: 0 };
-  
+
   const exitProps = isTopbarNavigation
     ? { x: '100%', opacity: 0 }
     : { y: '100%', opacity: 0 };
 
   return (
-    <div className="bg-inner rounded-tl-inner rounded-bl-inner overflow-hidden relative border-l border-t border-border/20">
+    <div className={`bg-inner overflow-hidden relative ${className ?? ''}`}>
       {!auth && <AuthScreen isFullScreen />}
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div

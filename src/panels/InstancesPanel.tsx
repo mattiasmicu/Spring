@@ -4,6 +4,7 @@ import { Layers, Plus, Play, X, Search, Loader2, MoreVertical, FolderOpen, Downl
 import { invoke } from '@tauri-apps/api/core';
 import { AnimatePresence, motion } from 'framer-motion';
 import { InstanceSettingsModal } from '../components/InstanceSettingsModal';
+import { Button } from '../components/Button';
 
 interface VersionEntry {
   id: string;
@@ -21,7 +22,8 @@ export const InstancesPanel: React.FC = () => {
 
   // Dialog
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [step, setStep] = useState<'name' | 'loader' | 'version'>('name');
+  const [step, setStep] = useState<'method' | 'name' | 'loader' | 'version' | 'import' | 'modpack'>('method');
+  const [creationMethod, setCreationMethod] = useState<'normal' | 'import' | 'modpack'>('normal');
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState('');
   const [versions, setVersions] = useState<VersionEntry[]>([]);
@@ -98,7 +100,8 @@ export const InstancesPanel: React.FC = () => {
   };
 
   const openDialog = () => {
-    setStep('name');
+    setStep('method');
+    setCreationMethod('normal');
     setName('');
     setNameError('');
     setSelectedVersion('');
@@ -146,6 +149,44 @@ export const InstancesPanel: React.FC = () => {
     }
   };
 
+  const handleImportFromLauncher = async (launcher: string) => {
+    setCreating(true);
+    setCreateError('');
+    try {
+      if (launcher === 'browse') {
+        await invoke('import_instance_browse');
+      } else {
+        await invoke('import_instance_from_launcher', { launcher });
+      }
+      const updated = await invoke<any[]>('list_instances');
+      setInstances(updated ?? []);
+      setDialogOpen(false);
+    } catch (e: any) {
+      setCreateError(typeof e === 'string' ? e : `Failed to import from ${launcher}.`);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleInstallModpack = async (source: string) => {
+    setCreating(true);
+    setCreateError('');
+    try {
+      if (source === 'file') {
+        await invoke('install_modpack_file');
+      } else {
+        await invoke('browse_modpacks', { source });
+      }
+      const updated = await invoke<any[]>('list_instances');
+      setInstances(updated ?? []);
+      setDialogOpen(false);
+    } catch (e: any) {
+      setCreateError(typeof e === 'string' ? e : `Failed to install modpack from ${source}.`);
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const filtered = versions.filter(v => {
     if (versionFilter === 'release' && v.type !== 'release') return false;
     if (versionFilter === 'snapshot' && v.type !== 'snapshot') return false;
@@ -160,12 +201,12 @@ export const InstancesPanel: React.FC = () => {
           <h1 className="text-2xl font-bold text-text-p">Instances</h1>
           <p className="text-text-s text-sm">{instances.length} installed</p>
         </div>
-        <button
+        <Button
           onClick={openDialog}
-          className="px-4 py-2 bg-text-p text-inner rounded-md text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-2"
+          className="px-4 py-2 text-xs flex items-center gap-2"
         >
           <Plus size={14} /> New Instance
-        </button>
+        </Button>
       </header>
 
       <div className="flex-1 overflow-y-auto pr-2 scroll-hide">
@@ -196,18 +237,20 @@ export const InstancesPanel: React.FC = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={(e) => { e.stopPropagation(); pushPanel('instanceDetail', { id: instance.id }); }}
-                    className="w-8 h-8 bg-inner3 border border-border rounded-md flex items-center justify-center text-text-s hover:text-text-p transition-colors"
+                    className="w-8 h-8 p-0 flex items-center justify-center"
                   >
                     <Play size={14} fill="currentColor" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="outline"
                     onClick={(e) => handleContextMenu(e, instance.id)}
-                    className="w-8 h-8 bg-inner3 border border-border rounded-md flex items-center justify-center text-text-s hover:text-text-p transition-colors"
+                    className="w-8 h-8 p-0 flex items-center justify-center"
                   >
                     <MoreVertical size={14} />
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             ))}
@@ -227,43 +270,48 @@ export const InstancesPanel: React.FC = () => {
           className="fixed bg-inner border border-border rounded-lg shadow-xl z-50 py-1 min-w-[160px]"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
-          <button
+          <Button
             onClick={() => openSettings(contextMenu.instanceId)}
-            className="w-full px-3 py-2 text-left text-sm text-text-s hover:bg-inner2 hover:text-text-p flex items-center gap-2"
+            variant="ghost"
+            className="w-full justify-start text-xs"
           >
-            <Settings size={14} />
+            <Settings size={14} className="mr-2" />
             Settings
-          </button>
+          </Button>
           <div className="h-px bg-border my-1" />
-          <button
+          <Button
             onClick={() => handleDuplicateInstance(contextMenu.instanceId)}
-            className="w-full px-3 py-2 text-left text-sm text-text-s hover:bg-inner2 hover:text-text-p flex items-center gap-2"
+            variant="ghost"
+            className="w-full justify-start text-xs"
           >
-            <Copy size={14} />
+            <Copy size={14} className="mr-2" />
             Duplicate
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => handleOpenFolder(contextMenu.instanceId)}
-            className="w-full px-3 py-2 text-left text-sm text-text-s hover:bg-inner2 hover:text-text-p flex items-center gap-2"
+            variant="ghost"
+            className="w-full justify-start text-xs"
           >
-            <FolderOpen size={14} />
+            <FolderOpen size={14} className="mr-2" />
             Open Folder
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => handleExportModpack(contextMenu.instanceId)}
-            className="w-full px-3 py-2 text-left text-sm text-text-s hover:bg-inner2 hover:text-text-p flex items-center gap-2"
+            variant="ghost"
+            className="w-full justify-start text-xs"
           >
-            <Download size={14} />
+            <Download size={14} className="mr-2" />
             Export Modpack
-          </button>
+          </Button>
           <div className="h-px bg-border my-1" />
-          <button
+          <Button
             onClick={() => handleDeleteInstance(contextMenu.instanceId)}
-            className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-400/10 flex items-center gap-2"
+            variant="ghost"
+            className="w-full justify-start text-xs text-red-400 hover:text-red-400"
           >
-            <Trash2 size={14} />
+            <Trash2 size={14} className="mr-2" />
             Delete
-          </button>
+          </Button>
         </div>
       )}
 
@@ -297,15 +345,70 @@ export const InstancesPanel: React.FC = () => {
                   <div>
                     <h2 className="text-sm font-bold text-text-p">New Instance</h2>
                     <p className="text-[11px] text-text-s mt-0.5">
-                      {step === 'name' ? 'Step 1 of 3 — Name' : step === 'loader' ? 'Step 2 of 3 — Loader' : 'Step 3 of 3 — Version'}
+                      {step === 'method' ? 'Choose how to create' : step === 'name' ? 'Step 1 of 3 — Name' : step === 'loader' ? 'Step 2 of 3 — Loader' : step === 'version' ? 'Step 3 of 3 — Version' : step === 'import' ? 'Import from launcher' : 'Install modpack'}
                     </p>
                   </div>
-                  <button onClick={closeDialog} disabled={creating} className="text-text-d hover:text-text-p transition-colors p-1">
-                    <X size={15} />
-                  </button>
+                  <Button onClick={closeDialog} disabled={creating} variant="ghost" className="p-1"><X size={15} /></Button>
                 </div>
 
                 <AnimatePresence mode="wait">
+                  {/* Step 0: Method Selection */}
+                  {step === 'method' && (
+                    <motion.div
+                      key="method"
+                      initial={{ opacity: 0, x: 12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -12 }}
+                      transition={{ duration: 0.14 }}
+                      className="p-5 flex flex-col gap-4"
+                    >
+                      <div className="grid grid-cols-1 gap-3">
+                        <button
+                          onClick={() => { setCreationMethod('normal'); setStep('name'); }}
+                          className="flex items-center gap-4 p-4 bg-inner2 border border-border rounded-xl hover:border-text-s transition-colors text-left group"
+                        >
+                          <div className="w-12 h-12 bg-inner3 rounded-lg flex items-center justify-center group-hover:bg-text-p/10 transition-colors">
+                            <Plus size={24} className="text-text-p" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-text-p">Create New</h3>
+                            <p className="text-xs text-text-s">Choose version and loader manually</p>
+                          </div>
+                        </button>
+                        
+                        <button
+                          onClick={() => { setCreationMethod('import'); setStep('import'); }}
+                          className="flex items-center gap-4 p-4 bg-inner2 border border-border rounded-xl hover:border-text-s transition-colors text-left group"
+                        >
+                          <div className="w-12 h-12 bg-inner3 rounded-lg flex items-center justify-center group-hover:bg-text-p/10 transition-colors">
+                            <Download size={24} className="text-text-p" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-text-p">Import</h3>
+                            <p className="text-xs text-text-s">Import from another launcher</p>
+                          </div>
+                        </button>
+                        
+                        <button
+                          onClick={() => { setCreationMethod('modpack'); setStep('modpack'); }}
+                          className="flex items-center gap-4 p-4 bg-inner2 border border-border rounded-xl hover:border-text-s transition-colors text-left group"
+                        >
+                          <div className="w-12 h-12 bg-inner3 rounded-lg flex items-center justify-center group-hover:bg-text-p/10 transition-colors">
+                            <Layers size={24} className="text-text-p" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-text-p">Modpack</h3>
+                            <p className="text-xs text-text-s">Install from Modrinth or CurseForge</p>
+                          </div>
+                        </button>
+                      </div>
+                      
+                      <div className="flex gap-2 mt-2">
+                        <Button onClick={closeDialog} variant="outline" className="flex-1 text-xs">Cancel</Button>
+                      </div>
+                    </motion.div>
+                  )}
+
                   {/* Step 1: Name */}
                   {step === 'name' && (
                     <motion.div
@@ -336,12 +439,8 @@ export const InstancesPanel: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={closeDialog} className="flex-1 py-2 bg-inner2 border border-border rounded-md text-xs font-bold text-text-s hover:text-text-p transition-colors">
-                          Cancel
-                        </button>
-                        <button onClick={handleNameNext} className="flex-1 py-2 bg-text-p text-inner rounded-md text-xs font-bold hover:opacity-90 transition-opacity">
-                          Next →
-                        </button>
+                        <Button onClick={closeDialog} variant="outline" className="flex-1 text-xs">Cancel</Button>
+                        <Button onClick={handleNameNext} className="flex-1 text-xs">Next →</Button>
                       </div>
                     </motion.div>
                   )}
@@ -370,16 +469,8 @@ export const InstancesPanel: React.FC = () => {
                         </select>
                       </div>
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => setStep('name')}
-                          disabled={creating}
-                          className="px-4 py-2 bg-inner2 border border-border rounded-md text-xs font-bold text-text-s hover:text-text-p transition-colors disabled:opacity-50"
-                        >
-                          ← Back
-                        </button>
-                        <button onClick={() => { setStep('version'); handleNameNext(); }} className="flex-1 py-2 bg-text-p text-inner rounded-md text-xs font-bold hover:opacity-90 transition-opacity">
-                          Next →
-                        </button>
+                        <Button onClick={() => setStep('name')} disabled={creating} variant="outline" className="px-4 text-xs">← Back</Button>
+                        <Button onClick={() => { setStep('version'); handleNameNext(); }} className="flex-1 text-xs">Next →</Button>
                       </div>
                     </motion.div>
                   )}
@@ -397,15 +488,14 @@ export const InstancesPanel: React.FC = () => {
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <div className="flex bg-inner2 border border-border rounded-md p-0.5 gap-0.5">
                           {(['release', 'snapshot', 'all'] as const).map(f => (
-                            <button
+                            <Button
                               key={f}
                               onClick={() => setVersionFilter(f)}
-                              className={`px-2.5 py-1 text-[10px] font-bold rounded capitalize transition-colors ${
-                                versionFilter === f ? 'bg-text-p text-inner' : 'text-text-s hover:text-text-p'
-                              }`}
+                              variant={versionFilter === f ? 'default' : 'ghost'}
+                              className="px-2.5 py-1 text-[10px] font-bold rounded capitalize"
                             >
                               {f}
-                            </button>
+                            </Button>
                           ))}
                         </div>
                         <div className="flex-1 flex items-center gap-2 bg-inner2 border border-border rounded-md px-2.5 py-1.5">
@@ -450,22 +540,96 @@ export const InstancesPanel: React.FC = () => {
                       {createError && <p className="text-[11px] text-red-400 flex-shrink-0">{createError}</p>}
 
                       <div className="flex gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => setStep('loader')}
-                          disabled={creating}
-                          className="px-4 py-2 bg-inner2 border border-border rounded-md text-xs font-bold text-text-s hover:text-text-p transition-colors disabled:opacity-50"
-                        >
-                          ← Back
-                        </button>
-                        <button
-                          onClick={handleCreate}
-                          disabled={!selectedVersion || !selectedLoader || creating}
-                          className="flex-1 py-2 bg-text-p text-inner rounded-md text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
+                        <Button onClick={() => setStep('loader')} disabled={creating} variant="outline" className="px-4 text-xs">← Back</Button>
+                        <Button onClick={handleCreate} disabled={!selectedVersion || !selectedLoader || creating} className="flex-1 text-xs">
                           {creating
-                            ? <><Loader2 size={12} className="animate-spin" /> Creating...</>
+                            ? <><Loader2 size={12} className="animate-spin mr-2" /> Creating...</>
                             : `Create · ${selectedVersion || '—'}`}
-                        </button>
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Import Step */}
+                  {step === 'import' && (
+                    <motion.div
+                      key="import"
+                      initial={{ opacity: 0, x: 12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -12 }}
+                      transition={{ duration: 0.14 }}
+                      className="p-5 flex flex-col gap-4"
+                    >
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button onClick={() => handleImportFromLauncher('minecraft')} variant="outline" className="text-xs py-3">
+                          Minecraft Launcher
+                        </Button>
+                        <Button onClick={() => handleImportFromLauncher('prism')} variant="outline" className="text-xs py-3">
+                          Prism Launcher
+                        </Button>
+                        <Button onClick={() => handleImportFromLauncher('modrinth')} variant="outline" className="text-xs py-3">
+                          Modrinth
+                        </Button>
+                        <Button onClick={() => handleImportFromLauncher('lunar')} variant="outline" className="text-xs py-3">
+                          Lunar Client
+                        </Button>
+                        <Button onClick={() => handleImportFromLauncher('feather')} variant="outline" className="text-xs py-3">
+                          Feather Client
+                        </Button>
+                        <Button onClick={() => handleImportFromLauncher('atlauncher')} variant="outline" className="text-xs py-3">
+                          ATLauncher
+                        </Button>
+                      </div>
+                      <Button onClick={() => handleImportFromLauncher('browse')} variant="ghost" className="w-full text-xs">
+                        Browse for instances folder...
+                      </Button>
+                      <div className="flex gap-2 mt-2">
+                        <Button onClick={() => setStep('method')} variant="outline" className="flex-1 text-xs">← Back</Button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Modpack Step */}
+                  {step === 'modpack' && (
+                    <motion.div
+                      key="modpack"
+                      initial={{ opacity: 0, x: 12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -12 }}
+                      transition={{ duration: 0.14 }}
+                      className="p-5 flex flex-col gap-4"
+                    >
+                      <div className="flex flex-col gap-3">
+                        <Button onClick={() => handleInstallModpack('modrinth')} variant="outline" className="w-full py-4 flex items-center gap-3">
+                          <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <Download size={18} className="text-green-400" />
+                          </div>
+                          <div className="text-left">
+                            <h3 className="text-sm font-bold">Modrinth</h3>
+                            <p className="text-xs text-text-s">Browse and install from Modrinth</p>
+                          </div>
+                        </Button>
+                        <Button onClick={() => handleInstallModpack('curseforge')} variant="outline" className="w-full py-4 flex items-center gap-3">
+                          <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                            <Download size={18} className="text-orange-400" />
+                          </div>
+                          <div className="text-left">
+                            <h3 className="text-sm font-bold">CurseForge</h3>
+                            <p className="text-xs text-text-s">Browse and install from CurseForge</p>
+                          </div>
+                        </Button>
+                        <Button onClick={() => handleInstallModpack('file')} variant="outline" className="w-full py-4 flex items-center gap-3">
+                          <div className="w-8 h-8 bg-inner3 rounded-lg flex items-center justify-center">
+                            <Layers size={18} className="text-text-p" />
+                          </div>
+                          <div className="text-left">
+                            <h3 className="text-sm font-bold">From File</h3>
+                            <p className="text-xs text-text-s">Import .zip, .mrpack, or .json</p>
+                          </div>
+                        </Button>
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <Button onClick={() => setStep('method')} variant="outline" className="flex-1 text-xs">← Back</Button>
                       </div>
                     </motion.div>
                   )}

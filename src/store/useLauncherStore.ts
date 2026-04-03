@@ -48,6 +48,10 @@ export interface Settings {
 }
 
 interface LauncherStore {
+  // Loading state
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+
   // Navigation
   panelStack: PanelEntry[];
   forwardStack: PanelEntry[];
@@ -93,6 +97,10 @@ interface LauncherStore {
 export const useLauncherStore = create<LauncherStore>()(
   persist(
     (set) => ({
+      // Loading state
+      isLoading: true,
+      setIsLoading: (loading) => set({ isLoading: loading }),
+
       // Navigation
       panelStack: [{ id: 'home' }],
       forwardStack: [],
